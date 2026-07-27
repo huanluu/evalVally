@@ -1,0 +1,10 @@
+paths:
+  evals: [evals/]
+  results: vally-results/
+  evalFilenames: ["eval.yaml", "eval.yml", "*.eval.yaml"]
+
+suites:
+  smoke:
+    description: "Small deterministic eval set for local development and CI"
+    filter:
+      priority: p0

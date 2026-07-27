@@ -1,0 +1,20 @@
+{
+  "name": "vally-pipeline-prototype",
+  "version": "1.0.0",
+  "description": "A minimal Vally evaluation pipeline with deterministic smoke cases.",
+  "private": true,
+  "scripts": {
+    "lint": "vally lint --eval-spec evals/smoke/eval.yaml",
+    "eval": "vally eval --suite smoke --workers 1 --junit",
+    "test": "npm run lint"
+  },
+  "keywords": [
+    "ai-evaluation",
+    "vally"
+  ],
+  "author": "Huan Lu",
+  "license": "MIT",
+  "devDependencies": {
+    "@microsoft/vally-cli": "^0.11.0"
+  }
+}

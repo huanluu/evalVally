@@ -1,0 +1,77 @@
+name: vally-smoke
+description: Deterministic smoke cases for file, code, and conversational agent behavior.
+version: "1.0"
+type: capability
+
+defaults:
+  runs: 1
+  timeout: 2m
+  executor: copilot-sdk
+
+stimuli:
+  - name: create-greeting-json
+    tags:
+      priority: p0
+      area: structured-output
+    prompt: |
+      Create a file named hello.json containing exactly two fields:
+      "message", with a short friendly greeting, and "language", with the
+      two-letter value "en". The file must contain valid JSON. Do not create
+      any other files.
+    artifacts:
+      include: [hello.json]
+    graders:
+      - type: file-exists
+        config:
+          path: hello.json
+      - type: run-command
+        config:
+          command: node
+          args:
+            - -e
+            - "const d=JSON.parse(require('fs').readFileSync('hello.json','utf8'));if(Object.keys(d).sort().join(',')!=='language,message'||d.language!=='en'||typeof d.message!=='string'||!d.message.trim())process.exit(1);console.log('greeting ok')"
+          stdout_contains: greeting ok
+
+  - name: implement-slugify
+    tags:
+      priority: p0
+      area: code-generation
+    prompt: |
+      Create slugify.mjs exporting a named function slugify(input). It must
+      convert its input to lowercase, trim surrounding whitespace, replace
+      each run of non-alphanumeric characters with one hyphen, and remove
+      leading or trailing hyphens. Do not create any other files.
+    artifacts:
+      include: [slugify.mjs]
+    graders:
+      - type: file-exists
+        config:
+          path: slugify.mjs
+      - type: file-matches
+        config:
+          path: slugify.mjs
+          pattern: 'export\s+function\s+slugify'
+      - type: run-command
+        config:
+          command: node
+          args:
+            - --input-type=module
+            - -e
+            - "const {slugify}=await import('./slugify.mjs');const cases=[[' Hello, Vally! ','hello-vally'],['already--slugged','already-slugged'],['***','']];for(const [input,want] of cases)if(slugify(input)!==want)process.exit(1);console.log('slugify ok')"
+          stdout_contains: slugify ok
+
+  - name: recall-across-turns
+    tags:
+      priority: p0
+      area: conversation
+    turns:
+      - "Remember this code name for the next turn: ALPHA-7. Reply only with ready."
+      - "Reply only with the code name I asked you to remember."
+    graders:
+      - type: completed
+      - type: output-contains
+        config:
+          substring: ALPHA-7
+
+scoring:
+  threshold: 1.0

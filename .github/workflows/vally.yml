@@ -1,0 +1,52 @@
+name: Vally evals
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  eval:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check Copilot credential
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$COPILOT_GITHUB_TOKEN" ]; then
+            echo "::error::Add a COPILOT_GITHUB_TOKEN repository secret with Account > Copilot Requests permission."
+            exit 1
+          fi
+      - name: Run smoke evals
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: npm run eval
+      - name: Upload Vally results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vally-results
+          path: vally-results/
+          if-no-files-found: warn
