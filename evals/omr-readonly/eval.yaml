@@ -8,6 +8,10 @@ defaults:
   timeout: 2m
   executor: copilot-sdk
 
+environment:
+  skills:
+    - /Volumes/Office/Office2/src/harness/utilities/.claude/skills/omr-build
+
 stimuli:
   - name: resolve-aggregated-mru-source-project
     tags:

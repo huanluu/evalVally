@@ -31,18 +31,19 @@ Results, trajectories, JUnit output, and captured artifacts are written under
 
 ## Experimental live OMR workspace
 
-The read-only OMR prototype runs Vally core directly against the existing
-Office2 checkout because OMR does not fully support Git worktrees:
+The `omr-live` Vally backend runs the built-in `copilot-sdk` executor directly
+against the existing Office2 checkout because OMR does not fully support Git
+worktrees:
 
 ```sh
 COPILOT_GITHUB_TOKEN=your-token npm run eval:omr-readonly
 ```
 
-This runner is intentionally restricted to `/Volumes/Office/Office2/src`,
-requires a clean checkout, permits only one concurrent run, never launches a
-build, and fails if the repository status or target file changes. It does not
-revert changes. This live OMR runner is currently macOS-only; the generic Vally
-smoke evals remain cross-platform.
+The backend is intentionally restricted to `/Volumes/Office/Office2/src`,
+requires a clean checkout, serializes trials, and fails if the repository status
+or target file changes unexpectedly. It does not silently revert agent changes.
+The backend is currently macOS-only; the generic Vally smoke evals remain
+cross-platform.
 
 Each run writes Vally-compatible output:
 
@@ -60,17 +61,15 @@ The output can be opened with `vally serve`, imported with `vally ingest`,
 re-graded with `vally grade`, and compared with another independent run using
 `vally compare`.
 
-The live runner currently supports one stimulus and one trial at a time. It
-does not use the CLI experiment/matrix runner, worker pool, retries, pass@k, or
-flakiness aggregation.
+Execution and reporting are owned by stock `vally eval` / `vally experiment
+run`; the plugin owns only the live Office workspace lifecycle.
 
 ### Live model comparison
 
 The experiment contract in
 `experiments/omr-model-comparison.experiment.yaml` compares Claude Opus 5,
-GPT-5.6 Terra, and GPT-5.6 Sol against the same live Office2 checkout. Sol is
-the baseline. Variants run sequentially, then Vally compares each treatment
-against the baseline:
+GPT-5.6 Terra, and GPT-5.6 Sol against the same live Office2 checkout. Sol is the baseline. The backend serializes model trials because they share one
+live checkout:
 
 ```sh
 COPILOT_GITHUB_TOKEN=your-token npm run eval:omr-models

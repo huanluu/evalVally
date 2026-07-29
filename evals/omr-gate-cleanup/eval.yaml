@@ -1,0 +1,55 @@
+name: omr-gate-cleanup-case-002
+description: Reproduce Harness case 002 as a direct Vally code-generation eval.
+version: "1.0"
+type: capability
+
+defaults:
+  runs: 1
+  timeout: 10m
+  executor: copilot-sdk
+  model: gpt-5.6-sol
+
+stimuli:
+  - name: remove-optimistic-ui-change-gate
+    tags:
+      priority: p0
+      area: gate-cleanup
+    prompt: |
+      Remove the obsolete ChangeGate
+      DocumentMru.AggregatedMru.IsOptimisticUIUpdateEnabled from the
+      documentmru/aggregatedmru component.
+
+      Remove every use of Gates::IsOptimisticUIUpdateEnabled, then remove its
+      definition and declaration from Gates.cpp and Gates.h. Preserve all
+      unrelated gates and current std::scoped_lock spelling.
+
+      In CAggregatedItems::GetSnapshot, removing the gate wrapper must not widen
+      the lock lifetime: keep the locker declaration and
+      m_pendingChanges.ApplyOptimisticChanges call inside an explicit { } scope.
+
+      Modify only:
+      - documentmru/aggregatedmru/AggItems.cpp
+      - documentmru/aggregatedmru/AggItemUpdateRequestFactory.cpp
+      - documentmru/aggregatedmru/Gates.cpp
+      - documentmru/aggregatedmru/Gates.h
+
+      Do not inspect git history, commits, pull requests, or blame. Do not build
+      or commit. Make the source change and explain it briefly.
+    graders:
+      - type: completed
+      - type: program
+        config:
+          program: /bin/zsh
+          args:
+            - -lc
+            - 'node "$EVALVALLY_ROOT/graders/validate-gate-cleanup-case-002.mjs"'
+          timeout: 30s
+      - type: tool-calls
+        config:
+          disallowed:
+            - name: "^bash$"
+              command: 'git\s+(?:log|show|blame|diff)'
+            - "^(create|Write)$"
+
+scoring:
+  threshold: 1.0
