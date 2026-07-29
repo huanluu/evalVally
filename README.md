@@ -78,6 +78,17 @@ COPILOT_GITHUB_TOKEN=your-token npm run eval:omr-models
 The validated Gemini-judged run is summarized visually in
 [`docs/gemini-model-comparison.html`](docs/gemini-model-comparison.html).
 
+### Gate-cleanup bug fixture
+
+`evals/omr-gate-cleanup/eval.yaml` presents a snapshot of ADO work item
+11659378 to the measured model. The local fixture
+`fixtures/gate-cleanup-lock-scope.yaml` tells the backend how to reverse the
+merged fix on local `main`; a separate setup Copilot session resolves revert
+conflicts when necessary. The measured session is forbidden from reading Git
+diff/history, and a hidden program grader checks the expected gate cleanup,
+RAII lock scope, unrelated gates, and file-change boundary. The backend restores
+the original Office2 source and branch after the run.
+
 ## Visual explainer
 
 Open [`docs/index.html`](docs/index.html) to see how the pipeline works, what

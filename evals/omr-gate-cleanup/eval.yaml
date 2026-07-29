@@ -34,8 +34,9 @@ stimuli:
       If you are not the owner, please reassign if possible; if you need help,
       contact the DocsUI experimentation champ: chewa
 
-      Do not inspect git history, commits, pull requests, or blame. Do not build
-      or commit. Diagnose and fix the bug, then explain the result briefly.
+      Do not inspect git history, commits, pull requests, blame, or diffs. Do
+      not build or commit. Diagnose and fix the bug, then explain the result
+      briefly.
     graders:
       - type: completed
       - type: program
@@ -49,7 +50,7 @@ stimuli:
         config:
           disallowed:
             - name: "^bash$"
-              command: 'git\s+(?:log|show|blame|diff)'
+              command: '\bgit\b[\s\S]*\b(?:diff|log|show|blame)\b'
             - "^(create|Write)$"
 
 scoring:

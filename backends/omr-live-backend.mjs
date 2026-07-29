@@ -64,9 +64,12 @@ function runOfficeGit(checkout, args, options = {}) {
       ...process.env,
       OMR_CHECKOUT: checkout,
       TERM: "dumb",
+      ...(options.env ?? {}),
     },
     maxBuffer: 16 * 1024 * 1024,
-    ...options,
+    ...Object.fromEntries(
+      Object.entries(options).filter(([key]) => key !== "env"),
+    ),
     },
   );
 }
