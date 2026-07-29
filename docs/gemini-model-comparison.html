@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Visual scorecard for the Gemini-judged OMR Vally model comparison.">
+  <link rel="icon" href="data:,">
+  <title>Gemini Judge · OMR Model Comparison</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #667085;
+      --paper: #f3f0e8;
+      --card: rgba(255, 255, 255, 0.88);
+      --line: rgba(23, 32, 51, 0.13);
+      --sol: #2667ff;
+      --terra: #13a17d;
+      --opus: #8a56d6;
+      --tie: #d48b17;
+      --good: #14845e;
+      --shadow: 0 22px 55px rgba(36, 43, 58, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(38, 103, 255, 0.12), transparent 28rem),
+        radial-gradient(circle at 90% 18%, rgba(138, 86, 214, 0.12), transparent 28rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    .wrap { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 28px 0; color: var(--muted); font-size: 0.88rem; }
+    .brand { color: var(--ink); font-weight: 800; }
+    .pill { padding: 7px 11px; background: rgba(255, 255, 255, 0.7); border: 1px solid var(--line); border-radius: 999px; }
+
+    .hero { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 48px; align-items: end; padding: 70px 0 88px; }
+    .eyebrow { margin: 0 0 16px; color: var(--opus); font-size: 0.78rem; font-weight: 850; letter-spacing: 0.15em; text-transform: uppercase; }
+    h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(3.4rem, 7vw, 6.8rem); font-weight: 500; letter-spacing: -0.065em; line-height: 0.92; }
+    .lede { max-width: 700px; margin: 28px 0 0; color: var(--muted); font-size: 1.12rem; }
+
+    .headline-card { padding: 30px; color: white; background: var(--ink); border-radius: 26px; box-shadow: var(--shadow); }
+    .headline-card small { color: #aeb9ca; font-weight: 750; letter-spacing: 0.11em; text-transform: uppercase; }
+    .headline-card strong { display: block; margin: 14px 0 8px; color: #ffd786; font-size: 3rem; letter-spacing: -0.05em; }
+    .headline-card p { margin: 0; color: #ccd4e1; }
+
+    section { padding: 76px 0; border-top: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: 0.72fr 1.28fr; gap: 36px; margin-bottom: 40px; }
+    h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.2rem, 4vw, 3.8rem); font-weight: 500; letter-spacing: -0.045em; line-height: 1; }
+    .section-head p { max-width: 650px; margin: 2px 0 0; color: var(--muted); }
+
+    .models { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .model-card { --accent: var(--sol); padding: 26px; background: var(--card); border: 1px solid rgba(255, 255, 255, 0.9); border-top: 5px solid var(--accent); border-radius: 22px; box-shadow: 0 12px 34px rgba(35, 43, 61, 0.07); }
+    .model-card.terra { --accent: var(--terra); }
+    .model-card.opus { --accent: var(--opus); }
+    .model-card h3 { margin: 0 0 8px; font-size: 1.28rem; }
+    .model-card .verdict { color: var(--good); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .model-card p { min-height: 68px; color: var(--muted); }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+    .metric { padding: 12px; background: rgba(23, 32, 51, 0.045); border-radius: 12px; }
+    .metric strong { display: block; font-size: 1.2rem; }
+    .metric span { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; }
+
+    .matrix { overflow: hidden; background: var(--card); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 22px; box-shadow: 0 12px 34px rgba(35, 43, 61, 0.07); }
+    .matrix-row { display: grid; grid-template-columns: 1.1fr 1fr 1fr 2.2fr; align-items: center; min-height: 74px; border-bottom: 1px solid var(--line); }
+    .matrix-row:last-child { border-bottom: 0; }
+    .matrix-row > div { padding: 18px 22px; }
+    .matrix-head { min-height: 52px; color: var(--muted); background: rgba(23, 32, 51, 0.045); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .tie { display: inline-block; padding: 6px 12px; color: #7a4b00; background: #fff0c8; border-radius: 999px; font-weight: 800; }
+    .delta-up { color: var(--good); font-weight: 800; }
+    .muted { color: var(--muted); }
+
+    .bars { display: grid; gap: 26px; }
+    .bar-group { display: grid; grid-template-columns: 130px 1fr 90px; gap: 14px; align-items: center; }
+    .track { height: 14px; overflow: hidden; background: rgba(23, 32, 51, 0.08); border-radius: 999px; }
+    .fill { height: 100%; width: var(--width); background: var(--color); border-radius: inherit; }
+    .bar-value { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+
+    .callout { display: grid; grid-template-columns: auto 1fr; gap: 20px; padding: 28px; color: #3d2a05; background: #fff1cc; border: 1px solid #f1d38d; border-radius: 20px; }
+    .callout-icon { font-size: 2rem; }
+    .callout h3 { margin: 0 0 8px; }
+    .callout p { margin: 0; color: #765821; }
+
+    footer { display: flex; justify-content: space-between; gap: 24px; padding: 42px 0 58px; color: var(--muted); font-size: 0.84rem; }
+
+    @media (max-width: 850px) {
+      .hero, .section-head { grid-template-columns: 1fr; }
+      .models { grid-template-columns: 1fr; }
+      .model-card p { min-height: 0; }
+      .matrix-row { grid-template-columns: 1fr; padding: 14px 0; }
+      .matrix-head { display: none; }
+      .matrix-row > div { padding: 7px 20px; }
+      .bar-group { grid-template-columns: 95px 1fr 70px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="brand">Vally · OMR model comparison</span>
+      <span class="pill">Judge: gemini-3.1-pro-preview</span>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <p class="eyebrow">One task · three models · one Gemini judge</p>
+          <h1>Correctness tied. Efficiency did not.</h1>
+          <p class="lede">All three models found the correct MDK source project and passed every deterministic grader. Gemini found no overall quality winner against the Sol baseline.</p>
+        </div>
+        <aside class="headline-card">
+          <small>Gemini overall verdict</small>
+          <strong>2 ties</strong>
+          <p>Terra = Sol · Opus = Sol. Opus received a small clarity advantage, but position-swap disagreement forced the overall result to a tie.</p>
+        </aside>
+      </div>
+
+      <section>
+        <div class="section-head">
+          <h2>Three runs</h2>
+          <p>Deterministic grading checks the objective contract: correct project, skill activation, no forbidden edit tools, and an unchanged Office2 checkout.</p>
+        </div>
+        <div class="models">
+          <article class="model-card">
+            <span class="verdict">5/5 graders passed</span>
+            <h3>GPT-5.6 Sol</h3>
+            <p>Baseline. Correct and concise, with the most complete evidence chain according to the earlier Sol judge.</p>
+            <div class="metrics">
+              <div class="metric"><strong>212.6k</strong><span>tokens</span></div>
+              <div class="metric"><strong>$0.258</strong><span>usage value</span></div>
+              <div class="metric"><strong>97.0s</strong><span>duration</span></div>
+              <div class="metric"><strong>11</strong><span>turns</span></div>
+              <div class="metric"><strong>23</strong><span>tool calls</span></div>
+            </div>
+          </article>
+          <article class="model-card terra">
+            <span class="verdict">5/5 graders passed</span>
+            <h3>GPT-5.6 Terra</h3>
+            <p>Gemini judged its concise, accurate answer equal to Sol while using substantially fewer tokens and turns.</p>
+            <div class="metrics">
+              <div class="metric"><strong>135.1k</strong><span>tokens</span></div>
+              <div class="metric"><strong>$0.139</strong><span>usage value</span></div>
+              <div class="metric"><strong>82.5s</strong><span>duration</span></div>
+              <div class="metric"><strong>7</strong><span>turns</span></div>
+              <div class="metric"><strong>13</strong><span>tool calls</span></div>
+            </div>
+          </article>
+          <article class="model-card opus">
+            <span class="verdict">5/5 graders passed</span>
+            <h3>Claude Opus 5</h3>
+            <p>Gemini found better structure and detail, but inconsistent position-swapped judgments forced an overall tie.</p>
+            <div class="metrics">
+              <div class="metric"><strong>336.3k</strong><span>tokens</span></div>
+              <div class="metric"><strong>$0.414</strong><span>usage value</span></div>
+              <div class="metric"><strong>80.8s</strong><span>duration</span></div>
+              <div class="metric"><strong>12</strong><span>turns</span></div>
+              <div class="metric"><strong>13</strong><span>tool calls</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Gemini’s judgment</h2>
+          <p>Every comparison is treatment-relative to Sol. A positive score favors the treatment; zero means Gemini found no stable winner.</p>
+        </div>
+        <div class="matrix">
+          <div class="matrix-row matrix-head">
+            <div>Treatment</div><div>Overall</div><div>Clarity</div><div>Why</div>
+          </div>
+          <div class="matrix-row">
+            <div><strong>GPT-5.6 Terra</strong> vs Sol</div>
+            <div><span class="tie">Tie · +0.00</span></div>
+            <div>Equal · +0.00</div>
+            <div class="muted">Both were correct, concise, and supported by appropriate repository evidence.</div>
+          </div>
+          <div class="matrix-row">
+            <div><strong>Claude Opus 5</strong> vs Sol</div>
+            <div><span class="tie">Tie · +0.00</span></div>
+            <div><span class="delta-up">Opus +0.40</span></div>
+            <div class="muted">Opus was more structured, but forward/reverse judge results disagreed, so Vally defaulted to a tie.</div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Tokens and cost</h2>
+          <p>Lower bars are better for this equally-correct task. Copilot reported precise nano-AIU consumption, converted below using 1 AI credit = $0.01 USD.</p>
+        </div>
+        <h3>Token usage</h3>
+        <div class="bars">
+          <div class="bar-group">
+            <strong>Terra</strong>
+            <div class="track"><div class="fill" style="--width:40.2%;--color:var(--terra)"></div></div>
+            <span class="bar-value">135.1k</span>
+          </div>
+          <div class="bar-group">
+            <strong>Sol</strong>
+            <div class="track"><div class="fill" style="--width:63.2%;--color:var(--sol)"></div></div>
+            <span class="bar-value">212.6k</span>
+          </div>
+          <div class="bar-group">
+            <strong>Opus</strong>
+            <div class="track"><div class="fill" style="--width:100%;--color:var(--opus)"></div></div>
+            <span class="bar-value">336.3k</span>
+          </div>
+        </div>
+        <h3 style="margin-top:44px">Usage-value equivalent</h3>
+        <div class="bars">
+          <div class="bar-group">
+            <strong>Terra</strong>
+            <div class="track"><div class="fill" style="--width:33.6%;--color:var(--terra)"></div></div>
+            <span class="bar-value">$0.139</span>
+          </div>
+          <div class="bar-group">
+            <strong>Sol</strong>
+            <div class="track"><div class="fill" style="--width:62.3%;--color:var(--sol)"></div></div>
+            <span class="bar-value">$0.258</span>
+          </div>
+          <div class="bar-group">
+            <strong>Opus</strong>
+            <div class="track"><div class="fill" style="--width:100%;--color:var(--opus)"></div></div>
+            <span class="bar-value">$0.414</span>
+          </div>
+        </div>
+        <p class="muted" style="margin-top:22px">Telemetry source: GitHub Copilot, unit <code>nano-aiu</code>. Conversion: 1,000,000,000 nano-AIU = 1 AI credit; GitHub currently prices 1 AI credit at $0.01 USD. This is consumption value, not necessarily an additional invoice charge when usage is covered by an included or pooled allowance.</p>
+      </section>
+
+      <section>
+        <div class="callout">
+          <div class="callout-icon" aria-hidden="true">⚠</div>
+          <div>
+            <h3>Do not call this a ranking yet</h3>
+            <p>This is one stimulus with one trial per model. Gemini only compared Terra→Sol and Opus→Sol; Terra and Opus were not directly compared. Repeat across representative cases and multiple trials before drawing model-level conclusions.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Run: 2026-07-29T13-15-12.296Z</span>
+      <span>Objective graders: 100% for all models · Office2 unchanged</span>
+    </footer>
+  </div>
+</body>
+</html>

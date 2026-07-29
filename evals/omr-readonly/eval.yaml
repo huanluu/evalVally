@@ -1,0 +1,42 @@
+name: omr-live-readonly
+description: Read-only source-project resolution against the live Office2 checkout.
+version: "1.0"
+type: capability
+
+defaults:
+  runs: 1
+  timeout: 2m
+  executor: copilot-sdk
+
+stimuli:
+  - name: resolve-aggregated-mru-source-project
+    tags:
+      priority: p0
+      area: omr-build-reasoning
+    prompt: |
+      Invoke the omr-build skill to answer this read-only question:
+
+      If a developer changes a line in
+      documentmru/aggregatedmru/AddRecentItemRequests.cpp, which MDK source
+      project should they build?
+
+      Inspect the production checkout as needed and explain the evidence briefly.
+      Do not edit, create, move, or delete any file. Do not run a build. Do not
+      determine downstream product targets. If you use an Office shell command,
+      first source /Volumes/Office/Office2/src/init.sh and use the Office Git
+      environment documented by the repository.
+    graders:
+      - type: completed
+      - type: output-contains
+        config:
+          substring: documentmru_aggregatedmru
+      - type: skill-invocation
+        config:
+          required: [omr-build]
+      - type: tool-calls
+        config:
+          disallowed:
+            - "^(create|edit|apply_patch|Write|Edit)$"
+
+scoring:
+  threshold: 1.0

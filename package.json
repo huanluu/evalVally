@@ -6,6 +6,8 @@
   "scripts": {
     "lint": "vally lint --eval-spec evals/smoke/eval.yaml",
     "eval": "vally eval --suite smoke --workers 1 --junit",
+    "eval:omr-readonly": "node scripts/run-live-workspace-eval.mjs evals/omr-readonly/eval.yaml",
+    "eval:omr-models": "node scripts/run-live-workspace-experiment.mjs experiments/omr-model-comparison.experiment.yaml",
     "test": "npm run lint"
   },
   "keywords": [
@@ -15,6 +17,7 @@
   "author": "Huan Lu",
   "license": "MIT",
   "devDependencies": {
+    "@microsoft/vally": "^0.11.0",
     "@microsoft/vally-cli": "^0.11.0"
   }
 }

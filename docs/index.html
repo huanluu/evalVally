@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A visual explanation of the Vally evaluation pipeline prototype.">
+  <link rel="icon" href="data:,">
+  <title>Vally Pipeline Prototype</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5f6b7a;
+      --paper: #f4f1e8;
+      --card: rgba(255, 255, 255, 0.82);
+      --line: rgba(23, 32, 51, 0.14);
+      --blue: #246bfd;
+      --cyan: #0ea5b7;
+      --green: #16835b;
+      --orange: #e86f2d;
+      --purple: #7656d6;
+      --shadow: 0 20px 50px rgba(31, 38, 53, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(36, 107, 253, 0.13), transparent 28rem),
+        radial-gradient(circle at 88% 24%, rgba(232, 111, 45, 0.12), transparent 26rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; }
+    .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 26px 0;
+      font-size: 0.9rem;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 750; }
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      color: white;
+      background: var(--ink);
+      border-radius: 10px;
+    }
+
+    .repo-link {
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 54px;
+      align-items: center;
+      padding: 70px 0 100px;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--blue);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 500;
+      letter-spacing: -0.065em;
+      line-height: 0.91;
+    }
+
+    .lede {
+      max-width: 680px;
+      margin: 30px 0 0;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.32rem);
+    }
+
+    .result-card {
+      position: relative;
+      padding: 34px;
+      overflow: hidden;
+      background: var(--ink);
+      color: white;
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .result-card::after {
+      position: absolute;
+      right: -50px;
+      bottom: -90px;
+      width: 220px;
+      height: 220px;
+      content: "";
+      background: var(--blue);
+      border-radius: 50%;
+      opacity: 0.48;
+      filter: blur(2px);
+    }
+
+    .score {
+      position: relative;
+      z-index: 1;
+      margin: 12px 0;
+      font-size: 5.4rem;
+      font-weight: 780;
+      letter-spacing: -0.07em;
+      line-height: 1;
+    }
+
+    .result-card p { position: relative; z-index: 1; margin: 0; color: #cfd6e3; }
+    .status { color: #83edbd; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+
+    section { padding: 90px 0; border-top: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: 0.7fr 1.3fr; gap: 40px; margin-bottom: 50px; }
+    h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.2rem, 5vw, 4.3rem); font-weight: 500; letter-spacing: -0.045em; line-height: 1; }
+    .section-head p { max-width: 640px; margin: 3px 0 0; color: var(--muted); font-size: 1.08rem; }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      counter-reset: stage;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 210px;
+      padding: 24px 20px;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 20px;
+      box-shadow: 0 12px 34px rgba(35, 43, 61, 0.07);
+      counter-increment: stage;
+    }
+
+    .stage::before {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      margin-bottom: 38px;
+      place-items: center;
+      color: white;
+      background: var(--accent);
+      border-radius: 50%;
+      content: counter(stage);
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .stage:not(:last-child)::after {
+      position: absolute;
+      z-index: 2;
+      top: 38px;
+      right: -17px;
+      color: var(--muted);
+      content: "→";
+      font-size: 1.15rem;
+    }
+
+    .stage:nth-child(1) { --accent: var(--blue); }
+    .stage:nth-child(2) { --accent: var(--purple); }
+    .stage:nth-child(3) { --accent: var(--orange); }
+    .stage:nth-child(4) { --accent: var(--cyan); }
+    .stage:nth-child(5) { --accent: var(--green); }
+    .stage h3 { margin: 0 0 8px; font-size: 1.08rem; }
+    .stage p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+    .cases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .case {
+      padding: 28px;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 22px;
+      box-shadow: 0 12px 34px rgba(35, 43, 61, 0.07);
+    }
+
+    .case-icon { font-size: 2rem; }
+    .case h3 { margin: 26px 0 10px; font-size: 1.2rem; }
+    .case p { min-height: 76px; margin: 0; color: var(--muted); }
+    .checks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+    .check {
+      padding: 6px 10px;
+      color: var(--green);
+      background: rgba(22, 131, 91, 0.09);
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .proof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .proof {
+      padding: 36px;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+    }
+
+    .proof.positive { border-top: 5px solid var(--green); }
+    .proof.boundary { border-top: 5px solid var(--orange); }
+    .proof h3 { margin: 0 0 20px; font-size: 1.3rem; }
+    .proof ul { display: grid; gap: 13px; margin: 0; padding: 0; list-style: none; }
+    .proof li { position: relative; padding-left: 26px; color: var(--muted); }
+    .proof li::before { position: absolute; left: 0; color: var(--accent); content: "●"; }
+    .positive { --accent: var(--green); }
+    .boundary { --accent: var(--orange); }
+
+    .automation {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .automation-step {
+      padding: 28px;
+      background: var(--ink);
+      color: white;
+      border-radius: 20px;
+    }
+
+    .automation-step small { color: #9aa8bc; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+    .automation-step h3 { margin: 12px 0 8px; }
+    .automation-step p { margin: 0; color: #c6cfdd; font-size: 0.9rem; }
+    .connector { display: grid; place-items: center; color: var(--muted); font-size: 1.5rem; }
+
+    .commands {
+      margin-top: 36px;
+      padding: 22px 26px;
+      overflow-x: auto;
+      color: #e5e9f0;
+      background: #111827;
+      border-radius: 16px;
+      font: 0.88rem/1.8 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    footer { display: flex; justify-content: space-between; gap: 24px; padding: 42px 0 58px; color: var(--muted); font-size: 0.86rem; }
+
+    @media (max-width: 900px) {
+      .hero, .section-head { grid-template-columns: 1fr; }
+      .hero { padding-top: 40px; }
+      .result-card { max-width: 520px; }
+      .pipeline { grid-template-columns: 1fr; }
+      .stage { min-height: 0; }
+      .stage::before { margin-bottom: 20px; }
+      .stage:not(:last-child)::after { top: auto; right: 50%; bottom: -24px; transform: rotate(90deg); }
+      .cases, .proof-grid { grid-template-columns: 1fr; }
+      .case p { min-height: 0; }
+      .automation { grid-template-columns: 1fr; }
+      .connector { transform: rotate(90deg); }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .stage, .case, .proof { transition: transform 180ms ease, box-shadow 180ms ease; }
+      .stage:hover, .case:hover, .proof:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span class="brand-mark">V</span> Vally prototype</div>
+      <a class="repo-link" href="https://github.com/huanluu/evalVally">View source on GitHub ↗</a>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <p class="eyebrow">Agent evaluation, end to end</p>
+          <h1>Did the agent actually do the job?</h1>
+          <p class="lede">This prototype turns three plain-language tasks into repeatable tests. Vally runs a real Copilot agent in an isolated workspace, records its behavior, checks the result with deterministic graders, and publishes evidence in CI.</p>
+        </div>
+        <aside class="result-card" aria-label="Latest validated result">
+          <span class="status">Validated locally and in GitHub Actions</span>
+          <div class="score">100%</div>
+          <p>3 stimuli passed · 7 deterministic checks · trajectories, JUnit, artifacts, and OpenTelemetry captured</p>
+        </aside>
+      </div>
+
+      <section>
+        <div class="section-head">
+          <h2>How one eval flows</h2>
+          <p>The YAML spec is the contract. It states the task, how the agent should be run, and the objective evidence required for a pass.</p>
+        </div>
+        <div class="pipeline">
+          <article class="stage">
+            <h3>Stimulus</h3>
+            <p>A prompt or multi-turn conversation defines the behavior under test.</p>
+          </article>
+          <article class="stage">
+            <h3>Executor</h3>
+            <p>Vally starts a real Copilot SDK session in an isolated workspace.</p>
+          </article>
+          <article class="stage">
+            <h3>Trajectory</h3>
+            <p>Turns, tool calls, tokens, timing, output, and errors are recorded.</p>
+          </article>
+          <article class="stage">
+            <h3>Graders</h3>
+            <p>File, regex, executable, completion, and output checks inspect the result.</p>
+          </article>
+          <article class="stage">
+            <h3>Score</h3>
+            <p>The suite passes only when every configured check succeeds.</p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>What we test</h2>
+          <p>The cases are deliberately small. Together they exercise three distinct agent capabilities and three kinds of objective evidence.</p>
+        </div>
+        <div class="cases">
+          <article class="case">
+            <div class="case-icon" aria-hidden="true">◫</div>
+            <h3>Structured output</h3>
+            <p>Create <code>hello.json</code> with exactly the requested schema and valid content.</p>
+            <div class="checks">
+              <span class="check">file exists</span>
+              <span class="check">JSON parses</span>
+              <span class="check">schema matches</span>
+            </div>
+          </article>
+          <article class="case">
+            <div class="case-icon" aria-hidden="true">⌘</div>
+            <h3>Working code</h3>
+            <p>Implement an exported <code>slugify()</code> function and pass executable edge cases.</p>
+            <div class="checks">
+              <span class="check">export found</span>
+              <span class="check">behavior runs</span>
+              <span class="check">edge cases pass</span>
+            </div>
+          </article>
+          <article class="case">
+            <div class="case-icon" aria-hidden="true">↻</div>
+            <h3>Conversation memory</h3>
+            <p>Remember <code>ALPHA-7</code> across turns and return it in the final response.</p>
+            <div class="checks">
+              <span class="check">session completed</span>
+              <span class="check">recall correct</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>What it proves</h2>
+          <p>The important claim is not that an agent succeeded once. It is that the same evaluation contract runs locally and in CI and leaves inspectable evidence.</p>
+        </div>
+        <div class="proof-grid">
+          <article class="proof positive">
+            <h3>Proven by this prototype</h3>
+            <ul>
+              <li>Vally can execute a real Copilot agent from a versioned eval spec.</li>
+              <li>Deterministic graders can validate files, executable behavior, and conversation output.</li>
+              <li>The same suite runs unattended in GitHub Actions with secret-based authentication.</li>
+              <li>Each run emits durable results: JSONL, Markdown, JUnit, trajectories, artifacts, and traces.</li>
+              <li>A failed grader makes the workflow fail, so eval quality can gate a pull request.</li>
+            </ul>
+          </article>
+          <article class="proof boundary">
+            <h3>Not proven yet</h3>
+            <ul>
+              <li>Production reliability across a large or representative benchmark.</li>
+              <li>Statistical consistency; each case currently runs only once.</li>
+              <li>Quality of subjective work that requires an LLM judge or human review.</li>
+              <li>Security, privacy, cost, latency, or cross-model performance at scale.</li>
+              <li>Integration with the full OMR Harness workflow, skills, work items, and Office builds.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>How automation works</h2>
+          <p>The repository separates cheap validation from credentialed execution. That keeps configuration errors fast while preserving real-agent evidence for every run.</p>
+        </div>
+        <div class="automation">
+          <article class="automation-step">
+            <small>1 · Trigger</small>
+            <h3>Push or pull request</h3>
+            <p>GitHub Actions checks out the versioned eval suite.</p>
+          </article>
+          <div class="connector" aria-hidden="true">→</div>
+          <article class="automation-step">
+            <small>2 · Validate and run</small>
+            <h3>Lint, then evaluate</h3>
+            <p>Schema lint runs first. Copilot executes only after lint succeeds.</p>
+          </article>
+          <div class="connector" aria-hidden="true">→</div>
+          <article class="automation-step">
+            <small>3 · Preserve</small>
+            <h3>Publish evidence</h3>
+            <p>The workflow uploads complete Vally results even when an eval fails.</p>
+          </article>
+        </div>
+        <div class="commands" aria-label="Commands to run the prototype">
+          npm ci<br>
+          npm run lint<br>
+          COPILOT_GITHUB_TOKEN=your-token npm run eval
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Prototype scope: one model, one trial per stimulus, deterministic smoke checks.</span>
+      <span>Built with Vally 0.11.0</span>
+    </footer>
+  </div>
+</body>
+</html>

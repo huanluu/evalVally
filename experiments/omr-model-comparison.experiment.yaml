@@ -1,0 +1,17 @@
+name: omr-live-model-comparison
+evals:
+  - ../evals/omr-readonly/eval.yaml
+
+matrix:
+  model:
+    path: /defaults/model
+    values:
+      - claude-opus-5
+      - gpt-5.6-terra
+      - gpt-5.6-sol
+
+baseline:
+  model: gpt-5.6-sol
+
+execution:
+  workers: 1
