@@ -89,6 +89,11 @@ diff/history, and a hidden program grader checks the expected gate cleanup,
 RAII lock scope, unrelated gates, and file-change boundary. The backend restores
 the original Office2 source and branch after the run.
 
+The Sol/Haiku comparison is defined in
+`experiments/omr-gate-cleanup-models.experiment.yaml`. Its AIU and usage-value
+summary is rendered in
+[`docs/gate-cleanup-cost-scorecard.html`](docs/gate-cleanup-cost-scorecard.html).
+
 ## Visual explainer
 
 Open [`docs/index.html`](docs/index.html) to see how the pipeline works, what
