@@ -15,26 +15,27 @@ stimuli:
       priority: p0
       area: gate-cleanup
     prompt: |
-      Remove the obsolete ChangeGate
-      DocumentMru.AggregatedMru.IsOptimisticUIUpdateEnabled from the
-      documentmru/aggregatedmru component.
+      Fix this bug:
 
-      Remove every use of Gates::IsOptimisticUIUpdateEnabled, then remove its
-      definition and declaration from Gates.cpp and Gates.h. Preserve all
-      unrelated gates and current std::scoped_lock spelling.
+      Title: [HARNESS-EVAL] Case 002: Remove ChangeGate
+      IsOptimisticUIUpdateEnabled (gate_cleanup pilot)
 
-      In CAggregatedItems::GetSnapshot, removing the gate wrapper must not widen
-      the lock lifetime: keep the locker declaration and
-      m_pendingChanges.ApplyOptimisticChanges call inside an explicit { } scope.
+      Description:
+      This is a ChangeGateCleanup Bug, tracking cleanup of ChangeGate
+      microsoft.office.docsui.documentmru.aggregatedmru.isoptimisticuiupdateenabled.
 
-      Modify only:
-      - documentmru/aggregatedmru/AggItems.cpp
-      - documentmru/aggregatedmru/AggItemUpdateRequestFactory.cpp
-      - documentmru/aggregatedmru/Gates.cpp
-      - documentmru/aggregatedmru/Gates.h
+      Additional details on Why did I get this bug? and How do I resolve this bug?
+
+      Date of gate introduction: 11/12/2025
+
+      The first commit I found this gate in:
+      572b5d4ef9e43742c78a30c8db8826b31cd4edbf
+
+      If you are not the owner, please reassign if possible; if you need help,
+      contact the DocsUI experimentation champ: chewa
 
       Do not inspect git history, commits, pull requests, or blame. Do not build
-      or commit. Make the source change and explain it briefly.
+      or commit. Diagnose and fix the bug, then explain the result briefly.
     graders:
       - type: completed
       - type: program

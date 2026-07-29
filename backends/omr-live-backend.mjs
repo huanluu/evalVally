@@ -151,7 +151,6 @@ function mergeEnvironment(environment, checkout) {
     env: {
       ...(environment?.env ?? {}),
       MS_BRANCH_ROOT: checkout,
-      HARNESS_ROOT: path.join(checkout, "harness"),
       PATH: `/usr/local/bin:${process.env.PATH ?? ""}`,
       GIT_EXEC_PATH: "/usr/local/git/libexec/git-core",
       EVALVALLY_ROOT: PLUGIN_ROOT,
@@ -232,9 +231,9 @@ class OmrLiveBackend {
       "target-file",
       DEFAULT_TARGET_FILE,
     );
-    const caseDir = scalarConfig(config, "case-dir", "");
-    if (caseDir) {
-      this.fixture = await this.loadFixture(caseDir, config);
+    const fixturePath = scalarConfig(config, "fixture", "");
+    if (fixturePath) {
+      this.fixture = await this.loadFixture(fixturePath, config);
     }
     await acquireProcessLock();
     this.lockHeld = true;
@@ -263,28 +262,25 @@ class OmrLiveBackend {
     }
   }
 
-  async loadFixture(caseDir, config) {
-    const resolvedDir = await realpath(caseDir);
-    const caseYaml = YAML.parse(
-      await readFile(path.join(resolvedDir, "case.yaml"), "utf8"),
+  async loadFixture(fixturePath, config) {
+    const resolvedPath = await realpath(
+      path.resolve(process.cwd(), fixturePath),
     );
-    const expected = YAML.parse(
-      await readFile(
-        path.join(resolvedDir, "expected_events.yaml"),
-        "utf8",
-      ),
-    );
-    if (caseYaml.setup_mode !== "revert_and_rebuild") {
+    const fixture = YAML.parse(await readFile(resolvedPath, "utf8"));
+    if (fixture.setup_mode !== "revert_and_rebuild") {
       throw new Error(
-        `OMR backend fixture currently supports revert_and_rebuild, got ${caseYaml.setup_mode}.`,
+        `OMR backend fixture currently supports revert_and_rebuild, got ${fixture.setup_mode}.`,
       );
     }
-    if (!Array.isArray(caseYaml.revert_commits) || caseYaml.revert_commits.length === 0) {
+    if (
+      !Array.isArray(fixture.revert_commits) ||
+      fixture.revert_commits.length === 0
+    ) {
       throw new Error("Case fixture has no revert_commits.");
     }
     const files = [
       ...new Set(
-        caseYaml.revert_commits.flatMap(
+        fixture.revert_commits.flatMap(
           (commit) => commit.files_touched ?? [],
         ),
       ),
@@ -293,11 +289,14 @@ class OmrLiveBackend {
       throw new Error("Case fixture has no files_touched.");
     }
     return {
-      caseDir: resolvedDir,
-      caseYaml,
-      expected,
+      fixturePath: resolvedPath,
+      fixture,
       files,
-      sourceBranch: scalarConfig(config, "source-branch", "main"),
+      sourceBranch: scalarConfig(
+        config,
+        "source-branch",
+        fixture.source_branch ?? "main",
+      ),
       setupModel: scalarConfig(config, "setup-model", "gpt-5.6-sol"),
     };
   }
@@ -311,7 +310,7 @@ class OmrLiveBackend {
       );
     }
 
-    const revertShas = this.fixture.caseYaml.revert_commits.map(
+    const revertShas = this.fixture.fixture.revert_commits.map(
       (commit) => commit.sha,
     );
     let revertFailed = false;
@@ -399,7 +398,7 @@ class OmrLiveBackend {
 
   async resolveFixtureConflicts(unmerged) {
     const resolver = new CopilotSdkExecutor();
-    const guidance = this.fixture.caseYaml.revert_commits
+    const guidance = this.fixture.fixture.revert_commits
       .map((commit) => commit.description)
       .join("; ");
     const prompt = [

@@ -7,7 +7,7 @@
     "lint": "vally lint --eval-spec evals/smoke/eval.yaml",
     "eval": "vally eval --suite smoke --workers 1 --junit",
     "eval:omr-readonly": "vally eval --eval-spec evals/omr-readonly/eval.yaml --backend ../../backends/omr-live-backend.mjs --backend-args checkout=/Volumes/Office/Office2/src --workers 1 --max-retries 0 --junit --output-dir vally-results/omr-live-readonly",
-    "eval:omr-gate-cleanup": "vally eval --eval-spec evals/omr-gate-cleanup/eval.yaml --backend ../../backends/omr-live-backend.mjs --backend-args checkout=/Volumes/Office/Office2/src --backend-args case-dir=/Volumes/Office/Office2/src/harness/evals/live/case-002-gate-cleanup-lock-scope --backend-args source-branch=main --backend-args setup-model=gpt-5.6-sol --workers 1 --max-retries 0 --junit --output-dir vally-results/omr-gate-cleanup",
+    "eval:omr-gate-cleanup": "vally eval --eval-spec evals/omr-gate-cleanup/eval.yaml --backend ../../backends/omr-live-backend.mjs --backend-args checkout=/Volumes/Office/Office2/src --backend-args fixture=fixtures/gate-cleanup-lock-scope.yaml --backend-args setup-model=gpt-5.6-sol --workers 1 --max-retries 0 --junit --output-dir vally-results/omr-gate-cleanup",
     "eval:omr-models": "vally experiment run experiments/omr-model-comparison.experiment.yaml --backend ../backends/omr-live-backend.mjs --backend-args checkout=/Volumes/Office/Office2/src --workers 1 --output-dir vally-results/omr-live-model-comparison",
     "test": "node --test tests/*.test.mjs && npm run lint"
   },

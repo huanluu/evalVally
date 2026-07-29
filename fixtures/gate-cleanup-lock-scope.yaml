@@ -1,0 +1,40 @@
+name: gate-cleanup-lock-scope
+setup_mode: revert_and_rebuild
+source_branch: main
+
+work_item:
+  id: 11659378
+  url: https://office.visualstudio.com/APEX/_workitems/edit/11659378
+  title: "[HARNESS-EVAL] Case 002: Remove ChangeGate IsOptimisticUIUpdateEnabled (gate_cleanup pilot)"
+  description: |
+    This is a ChangeGateCleanup Bug, tracking cleanup of ChangeGate
+    microsoft.office.docsui.documentmru.aggregatedmru.isoptimisticuiupdateenabled.
+
+    Additional details on Why did I get this bug? and How do I resolve this bug?
+
+    Date of gate introduction: 11/12/2025
+
+    The first commit I found this gate in:
+    572b5d4ef9e43742c78a30c8db8826b31cd4edbf
+
+    If you are not the owner, please reassign if possible; if you need help,
+    contact the DocsUI experimentation champ: chewa
+
+revert_commits:
+  - sha: bd63de3bfaf91ed52230ca252e2bf539569ef725
+    description: Remove the optimistic UI update ChangeGate
+    files_touched:
+      - documentmru/aggregatedmru/AggItems.cpp
+      - documentmru/aggregatedmru/AggItemUpdateRequestFactory.cpp
+      - documentmru/aggregatedmru/Gates.cpp
+      - documentmru/aggregatedmru/Gates.h
+
+conflict_resolution:
+  preserve:
+    - Current std::scoped_lock spelling
+    - Unrelated mainline changes
+  reintroduce:
+    - The if (Gates::IsOptimisticUIUpdateEnabled()) wrappers
+  forbid:
+    - Removing the gate during setup
+    - Committing setup changes
